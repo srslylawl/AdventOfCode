@@ -27,12 +27,60 @@ std::vector<std::string> GetLines(std::string path) {
 
 	HandleLine(path, [&lines](std::string line) {
 		lines.push_back(line);
-	});
+		});
 
 	return lines;
 }
 
+std::vector<int> GetCharacterPowers(int stringLength, int charRange) {
+	std::vector<int> result;
+	result.resize(stringLength);
 
+	for (size_t i = 0; i < stringLength; i++)
+	{
+		int index = stringLength - 1 - i;
+		int power = pow(charRange, i);
+		result[index] = power;
+	}
+
+	return result;
+}
+
+std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
+	const std::vector<char>* characters, int stringLength) {
+	std::vector<std::string> results;
+	int totalAmt = pow(characters->size(), stringLength);
+	results.reserve(totalAmt);
+
+	std::vector<std::string> columns;
+	std::string currentColumn;
+	currentColumn.reserve(stringLength);
+
+	for (size_t columnIndex = 0; columnIndex < stringLength; columnIndex++)
+	{
+		while (currentColumn.size() < totalAmt) {
+			for (auto c : *characters) {
+				int amt = powers->at(columnIndex);
+				currentColumn.append(amt, c);
+			}
+		}
+
+		columns.push_back(currentColumn);
+		currentColumn = "";
+	}
+
+	for (size_t i = 0; i < totalAmt; i++)
+	{
+		std::string current;
+		current.resize(stringLength);
+		for (size_t c = 0; c < stringLength; c++)
+		{
+			current[c] = columns[i][c]; /// ????
+		}
+	}
+
+	return results;
+}
 
 int ParseDigitFromString(const std::string& string) {
 	int digit = 0;
