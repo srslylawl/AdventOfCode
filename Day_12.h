@@ -14,12 +14,12 @@ bool arrangementIsValid(std::string wells, std::vector<int> groups) {
 	int startIndex = 0;
 
 	bool insideGroup = false;
-	for (size_t charIndex = 1; charIndex < example.size() && currentGroupIndex < groups.size(); charIndex++)
-	{
+	for (size_t charIndex = 1; charIndex < example.size(); charIndex++) {
 		char curr = example[charIndex];
 
 		if (curr == '#') {
 			if (!insideGroup) {
+				if(currentGroupIndex >= groups.size()) return false;
 				startIndex = charIndex;
 				insideGroup = true;
 			}
@@ -43,27 +43,14 @@ bool arrangementIsValid(std::string wells, std::vector<int> groups) {
 }
 
 void DoDay12() {
-	std::vector<char> characters = { '.', '#'};
-
-	int stringLength = 5;
-	auto powers = GetCharacterPowers(stringLength, characters.size());
-	auto permutations = GeneratePermutations(&powers, &characters, stringLength);
-
-	for (auto p : permutations) {
-		std::cout << p << std::endl;
-	}
-
-
 	auto lines = GetLines("input/day12.txt");
 
 	std::vector<arrangement> arrangements;
 	arrangements.resize(lines.size());
-
-	for (size_t lineIndex = 0; lineIndex < lines.size(); lineIndex++)
-	{
+	
+	for (size_t lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
 		int numbersIndex = 0;
-		for (size_t charIndex = 0; charIndex < lines[lineIndex].size(); charIndex++)
-		{
+		for (size_t charIndex = 0; charIndex < lines[lineIndex].size(); charIndex++) {
 			char currentChar = lines[lineIndex][charIndex];
 
 			if (currentChar == ' ') {
@@ -89,13 +76,43 @@ void DoDay12() {
 		}
 	}
 
-	for (size_t aIndex = 0; aIndex < arrangements.size(); aIndex++)
-	{
+	int possibilities = 0;
+	std::vector<char> symbols = { '.', '#' };
+	for (size_t aIndex = 0; aIndex < arrangements.size(); aIndex++) {
 		//solve each arrangement
 		auto& arrangement = arrangements[aIndex];
-		for (size_t i = 0; i < arrangement.unknownIndices.size(); i++)
-		{
 
+		std::cout << "Line: " << arrangement.wells << " ";
+		for (auto g : arrangement.contiguousGroups) {
+			std::cout << g << ",";
 		}
+		std::cout << std::endl;
+
+		int possibilitiesCurrent = 0;
+		auto permutations = GeneratePermutations(arrangement.unknownIndices.size(), &symbols);
+		for (auto& p : permutations) {
+			std::string result = arrangement.wells;
+			for (int i = 0; i < arrangement.unknownIndices.size(); i++) {
+				int index = arrangement.unknownIndices[i];
+				char symbol = p[i];
+				result[index] = symbol;
+			}
+
+			bool valid = arrangementIsValid(result, arrangement.contiguousGroups);
+
+			if(valid) {
+				//std::cout << "valid: " << result << std::endl;
+				possibilitiesCurrent++;
+			}
+			else {
+				//std::cout << "invalid: " << result << std::endl;
+			}
+		}
+
+		//std::cout << "Valid: " << possibilitiesCurrent << std::endl;
+
+		possibilities+= possibilitiesCurrent;
 	}
+
+	std::cout << "result: " << possibilities << std::endl;
 }

@@ -75,13 +75,19 @@ std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
 		current.resize(stringLength);
 		for (size_t c = 0; c < stringLength; c++)
 		{
-			current[c] = columns[i][c]; /// ????
+			current[c] = columns[c][i]; /// ????
 		}
+		results.push_back(current);
+		current = "";
 	}
 
 	return results;
 }
 
+std::vector<std::string> GeneratePermutations(int stringLength, const std::vector<char>* characters) {
+	auto powers = GetCharacterPowers(stringLength, characters->size());
+	return GeneratePermutations(&powers, characters, stringLength);
+}
 int ParseDigitFromString(const std::string& string) {
 	int digit = 0;
 
