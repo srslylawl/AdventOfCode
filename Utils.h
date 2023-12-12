@@ -49,7 +49,7 @@ std::vector<int> GetCharacterPowers(int stringLength, int charRange) {
 std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
 	const std::vector<char>* characters, int stringLength) {
 	std::vector<std::string> results;
-	int totalAmt = pow(characters->size(), stringLength);
+	long totalAmt = pow(characters->size(), (long)stringLength);
 	results.reserve(totalAmt);
 
 	std::vector<std::string> columns;
@@ -60,7 +60,7 @@ std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
 	{
 		while (currentColumn.size() < totalAmt) {
 			for (auto c : *characters) {
-				int amt = powers->at(columnIndex);
+				long amt = powers->at(columnIndex);
 				currentColumn.append(amt, c);
 			}
 		}
