@@ -4,6 +4,7 @@
 #include <fstream>
 #include <functional>
 #include <vector>
+#include <chrono>
 
 void HandleLine(std::string path, std::function<void(std::string)> perLineCallback) {
 	std::ifstream fileStream;
@@ -20,6 +21,14 @@ void HandleLine(std::string path, std::function<void(std::string)> perLineCallba
 	}
 
 	fileStream.close();
+}
+
+auto GetCurrentTime() {
+	return std::chrono::high_resolution_clock::now();
+}
+
+auto GetSeconds(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e+9;
 }
 
 std::vector<std::string> GetLines(std::string path) {
@@ -116,6 +125,12 @@ bool CharIsDigit(char c) {
 	int intVal = c - '0';
 
 	return intVal >= 0 && intVal <= 9;
+}
+
+void PrintMap(std::vector<std::string>& vec) {
+	for(auto& s : vec) {
+		std::cout << s << std::endl;
+	}
 }
 
 std::vector<int> GetNumbersFromString(const std::string& string) {
