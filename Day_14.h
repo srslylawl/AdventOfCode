@@ -55,9 +55,7 @@ void DoDay14() {
 
 	int result = 0;
 
-	std::vector<std::tuple<int, int>> directions{
-		{0, -1},{-1, 0},{0, 1},{1,0}
-	};
+
 
 	int width = lines[0].size();
 	int height = lines.size();
@@ -81,62 +79,113 @@ void DoDay14() {
 			map[coord.y][coord.x] = 'O';
 		}
 	};
+
+	std::vector<std::tuple<int, int>> directions{
+	{0, -1},{-1, 0},{0, 1},{1,0}
+	};
 	std::vector<std::string> currentMap = newMap;
 	fillMapWithRocks(currentMap, rocks);
 	for (size_t cycle = 0; cycle < numCycles; cycle++) {
 		int currentCycleResult = 0;
 
 		for (size_t directionIndex = 0; directionIndex < directions.size(); directionIndex++) {
+			int outerItStart, innerItStart;
+			int outerItEnd, innerItEnd;
+			int innerItDir, outerItDir;
 
-			std::sort(rocks.begin(), rocks.end(), [directionIndex](const coord& a, const coord& b) {
-				switch (directionIndex) {
-					case 0:
-						return a.y < b.y;
-					case 1:
-						return a.x < b.x;
-					case 2:
-						return a.y > b.y;
-					case 3:
-						return a.x > b.x;
+			int xGrowth, yGrowth;
+
+			xGrowth = std::get<0>(directions[directionIndex]);
+			yGrowth = std::get<1>(directions[directionIndex]);
+
+			bool xCoordIsOuter;
+
+			switch (directionIndex) {
+				case 0:
+				{
+					//top to bottom, left to right
+					outerItStart = 0;
+					innerItStart = 0;
+					outerItEnd = height;
+					innerItEnd = width;
+					outerItDir = 1;
+					innerItDir = 1;
+					xCoordIsOuter = false;
 				}
+				break;
+				case 1:
+					//left to right, top to bottom
+					outerItStart = 0;
+					innerItStart = 0;
+					outerItEnd = width;
+					innerItEnd = height;
+					outerItDir = 1;
+					innerItDir = 1;
+					xCoordIsOuter = true;
+					break;
+				case 2:
+					//bottom to top, left to right
+					outerItStart = height-1;
+					innerItStart = 0;
+					outerItEnd = -1;
+					innerItEnd = width;
+					outerItDir = -1;
+					innerItDir = 1;
+					xCoordIsOuter = false;
+					break;
+				case 3:
+					//right to left, top to bottom
+					outerItStart = width -1;
+					innerItStart = 0;
+					outerItEnd = -1;
+					innerItEnd = height;
+					outerItDir = -1;
+					innerItDir = 1;
+					xCoordIsOuter = true;
+					break;
+				default:
+					throw;
+			}
 
-				return false;
-			});
-			for (size_t i = 0; i < rocks.size(); i++) {
-				auto& rockCoord = rocks[i];
-				const auto& direction = directions[directionIndex];
+			for (int outer = outerItStart; outer != outerItEnd; outer += outerItDir) {
+				for (int inner = innerItStart; inner != innerItEnd; inner += innerItDir) {
+					coord current;
+					if (xCoordIsOuter) {
+						current.x = outer;
+						current.y = inner;
+					}
+					else {
+						current.x = inner;
+						current.y = outer;
+					}
+					char c = currentMap[current.y][current.x];
+					if (c != 'O') continue;
 
-				coord resCoord;
-				resCoord.x = rockCoord.x;
-				resCoord.y = rockCoord.y;
+					coord endPosition = current;
+					for (int iteration = 1;; iteration++) {
+						coord newCoord;
+						newCoord.x = current.x + (iteration * xGrowth);
+						newCoord.y = current.y + (iteration * yGrowth);
 
-				for (int iteration = 1;; iteration++) {
-					coord newCoord;
-					newCoord.x = rockCoord.x + (iteration * std::get<0>(direction));
-					newCoord.y = rockCoord.y + (iteration * std::get<1>(direction));
+						if (newCoord.x < 0 || newCoord.y < 0 || newCoord.x >= width || newCoord.y >= height) { //out of bounds
+							break;
+						}
 
-					if (newCoord.x < 0 || newCoord.y < 0 || newCoord.x >= width || newCoord.y >= height) { //out of bounds
+						if (currentMap[newCoord.y][newCoord.x] == '.') {
+							endPosition = newCoord;
+							continue;
+						}
 						break;
 					}
 
-					if (currentMap[newCoord.y][newCoord.x] == '.') {
-						resCoord = newCoord;
-						continue;
+					currentMap[current.y][current.x] = '.';
+					currentMap[endPosition.y][endPosition.x] = 'O';
+
+					if (directionIndex == directions.size() - 1) {
+						currentCycleResult += height - endPosition.y;
 					}
-
-					break;
-				}
-				currentMap[rockCoord.y][rockCoord.x] = '.';
-				rockCoord.x = resCoord.x;
-				rockCoord.y = resCoord.y;
-				currentMap[rockCoord.y][rockCoord.x] = 'O';
-
-				if (directionIndex == directions.size() - 1) {
-					currentCycleResult += height - rockCoord.y;
 				}
 			}
-			//std::cout << "Dir" << directionIndex << std::endl;
-			//PrintMap(currentMap);
 		}
 
 		if (sameCount > 100) {
