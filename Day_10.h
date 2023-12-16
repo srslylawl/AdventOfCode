@@ -3,10 +3,6 @@
 #include "Utils.h"
 #include <windows.h>
 
-struct coord {
-	int x, y;
-};
-
 coord translate(coord start, char pipe, coord pipePos) {
 	coord end = start;
 	switch (pipe) {

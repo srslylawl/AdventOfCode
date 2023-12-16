@@ -5,13 +5,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-struct coord {
-	int x, y;
 
-	bool operator==(const coord& other) {
-		return x == other.x && y == other.y;
-	}
-};
 
 void DoDay14() {
 	auto lines = GetLines("input/day14.txt");

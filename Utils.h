@@ -6,6 +6,32 @@
 #include <vector>
 #include <chrono>
 
+struct coord {
+	int x, y;
+
+	bool operator==(const coord& other) const {
+		return x == other.x && y == other.y;
+	}
+
+	coord(int x, int y) : x(x), y(y) {}
+
+	coord() : x(0), y(0) {}
+};
+
+namespace std {
+	template<>
+	struct hash<coord> {
+		std::size_t operator()( const coord& c ) const
+    {
+        std::size_t res = 17;
+        res = res * 31 + hash<int>()( c.x );
+        res = res * 31 + hash<int>()( c.y );
+        return res;
+    }
+	
+	};
+}
+
 void HandleLine(std::string path, std::function<void(std::string)> perLineCallback) {
 	std::ifstream fileStream;
 	fileStream.open(path.c_str());
@@ -36,7 +62,7 @@ std::vector<std::string> GetLines(std::string path) {
 
 	HandleLine(path, [&lines](std::string line) {
 		lines.push_back(line);
-		});
+	});
 
 	return lines;
 }
@@ -45,8 +71,7 @@ std::vector<int> GetCharacterPowers(int stringLength, int charRange) {
 	std::vector<int> result;
 	result.resize(stringLength);
 
-	for (size_t i = 0; i < stringLength; i++)
-	{
+	for (size_t i = 0; i < stringLength; i++) {
 		int index = stringLength - 1 - i;
 		int power = pow(charRange, i);
 		result[index] = power;
@@ -56,7 +81,7 @@ std::vector<int> GetCharacterPowers(int stringLength, int charRange) {
 }
 
 std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
-	const std::vector<char>* characters, int stringLength) {
+											  const std::vector<char>* characters, int stringLength) {
 	std::vector<std::string> results;
 	long totalAmt = pow(characters->size(), (long)stringLength);
 	results.reserve(totalAmt);
@@ -65,8 +90,7 @@ std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
 	std::string currentColumn;
 	currentColumn.reserve(stringLength);
 
-	for (size_t columnIndex = 0; columnIndex < stringLength; columnIndex++)
-	{
+	for (size_t columnIndex = 0; columnIndex < stringLength; columnIndex++) {
 		while (currentColumn.size() < totalAmt) {
 			for (auto c : *characters) {
 				long amt = powers->at(columnIndex);
@@ -78,12 +102,10 @@ std::vector<std::string> GeneratePermutations(const std::vector<int>* powers,
 		currentColumn = "";
 	}
 
-	for (size_t i = 0; i < totalAmt; i++)
-	{
+	for (size_t i = 0; i < totalAmt; i++) {
 		std::string current;
 		current.resize(stringLength);
-		for (size_t c = 0; c < stringLength; c++)
-		{
+		for (size_t c = 0; c < stringLength; c++) {
 			current[c] = columns[c][i]; /// ????
 		}
 		results.push_back(current);
@@ -128,7 +150,7 @@ bool CharIsDigit(char c) {
 }
 
 void PrintMap(std::vector<std::string>& vec) {
-	for(auto& s : vec) {
+	for (auto& s : vec) {
 		std::cout << s << std::endl;
 	}
 }

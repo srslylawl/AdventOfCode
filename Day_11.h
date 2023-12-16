@@ -3,10 +3,6 @@
 #include <vector>
 
 
-struct coord {
-	int x, y;
-};
-
 void DoDay11() {
 	auto lines = GetLines("input/day11.txt");
 
