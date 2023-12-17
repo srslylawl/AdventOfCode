@@ -32,6 +32,31 @@ namespace std {
 	};
 }
 
+struct beam {
+	coord position;
+	coord direction;
+
+	beam(coord pos, coord dir) : position(pos), direction(dir) {
+	}
+
+	bool operator==(const beam& other) const {
+		return position == other.position && direction == other.direction;
+	}
+};
+
+namespace std {
+	template<>
+	struct hash<beam> {
+		std::size_t operator()(const beam& b) const {
+			std::size_t res = 17;
+			res = res * 31 + hash<coord>()(b.position);
+			res = res * 31 + hash<coord>()(b.direction);
+			return res;
+		}
+
+	};
+}
+
 void HandleLine(std::string path, std::function<void(std::string)> perLineCallback) {
 	std::ifstream fileStream;
 	fileStream.open(path.c_str());
