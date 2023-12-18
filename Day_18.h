@@ -1,149 +1,78 @@
 #pragma once
 #include "Utils.h"
+#include "sstream"
 
 
 void DoDay18() {
 	auto lines = GetLines("input/day18.txt");
 
-	std::vector<std::string> dugMap;
+	longCoord currentPos(0, 0);
 
-	int width = 800;
-	int height = 800;
+	long long edgeCount = 0;
+	std::vector<longCoord> points{ currentPos };
 
-	for (size_t i = 0; i < height; i++) {
-		std::string str;
-		str.append(width, '.');
-		dugMap.push_back(str);
-	}
-
-	coord currentPos(0, 0);
-
-
-	coord boundsMin(width/2, height/2);
-	coord boundsMax(0, 0);
-
-	coord actualBoundsMin(0,0);
-
-	int edgeCount = 0;
-
-	std::vector<coord> points {currentPos};
-
-	char previous = 'R';
 	for (size_t i = 0; i < lines.size(); i++) {
-		char direction = lines[i][0];
 
-		int count = 0;
-		for (size_t charIndex = 2; charIndex < lines.size(); charIndex++) {
-			if (lines[i][charIndex] == ' ') {
-				std::string numStr = lines[i].substr(2, charIndex - 2);
-				count = ParseDigitFromString(numStr);
+		int startIndex = 0;
+		for (size_t charIndex = 4; charIndex < lines[i].size(); charIndex++) {
+			if (lines[i][charIndex] == '#') {
+				startIndex = charIndex + 1;
+				continue;
+			}
+
+			if (lines[i][charIndex] == ')') {
+				std::string fullStr = lines[i].substr(startIndex, charIndex - startIndex);
+
+				int direction = ParseDigitFromString(fullStr.substr(fullStr.size() - 1, 1));
+
+				std::string hexCodeDistance = fullStr.substr(0, 5);
+
+				long long ct;
+				std::stringstream ss;
+
+				ss << std::hex << hexCodeDistance;
+				ss >> ct;
+
+				edgeCount += ct;
+
+				longCoord newPoint = currentPos;
+
+				switch (direction) {
+					case 0:
+						newPoint.x += ct;
+						break;
+					case 1:
+						newPoint.y += ct;
+						break;
+					case 2:
+						newPoint.x -= ct;
+						break;
+					case 3:
+						newPoint.y -= ct;
+						break;
+					default:
+						break;
+				}
+
+				currentPos = newPoint;
+				points.push_back(newPoint);
 				break;
 			}
 		}
-
-		edgeCount += count;
-
-		switch (direction) {
-			case 'R':
-			{
-				if(previous == 'D') {
-					dugMap[currentPos.y+boundsMin.y][currentPos.x + boundsMin.x] = '#';
-				}
-				for (size_t len = 0; len < count; len++) {
-					dugMap[currentPos.y+boundsMin.y][++currentPos.x+boundsMin.x] = '#';
-				}
-			}
-			break;
-			case 'D':
-			{
-				if(previous == 'R' || previous == 'L') {
-					dugMap[currentPos.y+boundsMin.y][currentPos.x + boundsMin.x] = '|';
-				}
-
-				for (size_t len = 0; len < count; len++) {
-					dugMap[++currentPos.y+boundsMin.y][currentPos.x+boundsMin.x] = '|';
-				}
-			}
-			break;
-			case 'U':
-			{
-				//if(previous == 'R' || previous == 'L') {
-				//	dugMap[currentPos.y+boundsMin.y][currentPos.x + boundsMin.x] = '|';
-				//}
-
-				for (size_t len = 0; len < count; len++) {
-					dugMap[--currentPos.y+boundsMin.y][currentPos.x+boundsMin.x] = '|';
-				}
-			}
-			break;
-			case 'L':
-			{
-				if(previous == 'D') {
-					dugMap[currentPos.y+boundsMin.y][currentPos.x + boundsMin.x] = '#';
-				}
-				for (size_t len = 0; len < count; len++) {
-					dugMap[currentPos.y+boundsMin.y][--currentPos.x+boundsMin.x] = '#';
-				}
-			}
-			break;
-			default:
-				break;
-		}
-
-		previous = direction;
-
-		if(currentPos.x >boundsMax.x) {
-			boundsMax.x = currentPos.x;
-		}
-
-		if(currentPos.x <= actualBoundsMin.x) {
-			actualBoundsMin.x = currentPos.x;
-		}
-
-		if(currentPos.y > boundsMax.y) {
-			boundsMax.y = currentPos.y;
-		}
-
-		if(currentPos.y < actualBoundsMin.y) {
-			actualBoundsMin.y = currentPos.y;
-		}
-	}
-	int insideCount = 0;
-	int topCutoff = boundsMin.y + actualBoundsMin.y;
-	int bottomCutOff = height/2 - boundsMax.y;
-
-	int leftCutoff = boundsMin.x + actualBoundsMin.x;
-	int rightCutoff = width/2 - boundsMax.x;
-
-	dugMap.erase(dugMap.begin(), dugMap.begin()+topCutoff);
-	dugMap.erase(dugMap.end()-bottomCutOff+1, dugMap.end());
-
-
-	//dugMap.erase(dugMap.begin()+boundsMax.y+boundsMin.y+1-topCutoff, dugMap.end());
-	for (int i = 0; i < dugMap.size(); i++) {
-		dugMap[i].erase(dugMap[i].begin(), dugMap[i].begin()+leftCutoff);
-		dugMap[i].erase(dugMap[i].end()-rightCutoff+1, dugMap[i].end());
-		bool inside = false;
-		for (int charIndex = 0; charIndex < dugMap[i].size(); charIndex++) {
-			char c = dugMap[i][charIndex];
-			if(c == '|') {
-				inside = !inside;
-			}
-			else if (c == '.' && inside) {
-				insideCount++;
-				dugMap[i][charIndex] = 'o';
-			}
-		}
 	}
 
-	PrintMap(dugMap);
-
-	std:: cout << "edge: " << edgeCount << " inside: " << insideCount << " total: " << edgeCount + insideCount << std::endl;
-
-	std::ofstream file;
-	file.open("output.txt");
-	for (auto& s : dugMap) {
-		file << s << std::endl;
+	long long shoelaceArea = 0;
+	for (int i = 0; i < points.size() - 1; ++i) {
+		shoelaceArea += points[i].x * points[i + 1].y - points[i].y * points[i + 1].x;
 	}
-	file.close();
+
+
+	shoelaceArea /= 2;
+	shoelaceArea = abs(shoelaceArea);
+
+	long long interiorPts = shoelaceArea + 1 - (edgeCount / 2);
+
+	long long area = interiorPts + edgeCount;
+
+	std::cout << area << std::endl;
 }

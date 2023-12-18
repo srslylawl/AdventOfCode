@@ -18,6 +18,14 @@ struct coord {
 	coord() : x(0), y(0) {}
 };
 
+struct longCoord {
+	long long x, y;
+
+	longCoord(long long x, long long y) : x(x), y(y) {}
+
+	longCoord() : x(0), y(0) {}
+};
+
 namespace std {
 	template<>
 	struct hash<coord> {
