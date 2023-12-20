@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "Day_19.h"
+#include "Day_20.h"
 
 
 
@@ -11,5 +11,5 @@
 
 int main()
 {
-    DoDay19();
+    DoDay20();
 }
