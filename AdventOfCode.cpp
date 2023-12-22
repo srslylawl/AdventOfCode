@@ -3,14 +3,12 @@
 
 #include <iostream>
 
-#include "Day_21.h"
+#include "Day_22.h"
 
 
 
 
 
 int main() {
-	DoDay21();
-
-
+	DoDay22();
 }

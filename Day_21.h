@@ -208,9 +208,9 @@ void DoDay21() {
 
 	int evenCount, oddCount; //not 100% sure here
 
-//#define print PrintMap(mapCopy); mapCopy = lines; std::cout << std::endl;
+#define print PrintMap(mapCopy); mapCopy = lines; std::cout << std::endl;
 
-#define print 
+//#define print 
 
 	drawMap = true;
 	GetStepsNeededToFill(startPositionsStart, lines, oddCount, maxSteps);
@@ -302,8 +302,7 @@ void DoDay21() {
 		GetStepsNeededToFill(bigBotLeftPosStart, lines, bigbottomLeftCorner, steps);
 	print
 
-		long long bigCornerAmt = totalMapsPerAxis - 1;
-
+	long long bigCornerAmt = totalMapsPerAxis - 1;
 	long long bigCorners = bigtopLeftCorner + bigtopRightCorner + bigbottomLeftCorner + bigbottomRightCorner;
 
 
