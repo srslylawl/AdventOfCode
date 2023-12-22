@@ -9,7 +9,8 @@
 
 
 
-int main()
-{
-    DoDay21();
+int main() {
+	DoDay21();
+
+
 }

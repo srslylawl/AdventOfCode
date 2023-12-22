@@ -5,7 +5,15 @@
 #include <unordered_set>
 #include <unordered_map>
 
+int loopCoordinate(int input, int mod) {
+	int res = abs(input) % mod;
 
+	if (input < 0) {
+		res = (mod - (mod + res) % mod) % mod;
+	}
+
+	return res;
+}
 
 const static std::vector<coord> directions = {
 		{0, 1}, {0, -1}, {1, 0}, {-1, 0}
@@ -58,13 +66,13 @@ int GetNumEndPositions(position pos, std::vector<std::string>& lines, std::unord
 	}
 
 	if (pos.stepsRemaining == 0) {
-		char& cur = mapCopy[pos.coord.y][pos.coord.x];
-		if (cur == 'S' || cur == '.') {
-			cur = '1';
-		}
-		else {
-			cur++;
-		}
+		//char& cur = mapCopy[pos.coord.y][pos.coord.x];
+		//if (cur == 'S' || cur == '.') {
+		//	cur = '1';
+		//}
+		//else {
+		//	cur++;
+		//}
 
 		cache[pos] = 1;
 
@@ -77,12 +85,14 @@ int GetNumEndPositions(position pos, std::vector<std::string>& lines, std::unord
 	for (const auto dir : directions) {
 		coord current(pos.coord.x + dir.x, pos.coord.y + dir.y);
 
-		if (current.y < 0 || current.y > lines.size() - 1 || current.x < 0 || current.x > lines[current.y].size() - 1) {
-			//out of bounds
-			continue;
-		}
+		//if (current.y < 0 || current.y > lines.size() - 1 || current.x < 0 || current.x > lines[current.y].size() - 1) {
+		//	//out of bounds
+		//	continue;
+		//}
 
-		if (lines[current.y][current.x] == '.' || lines[current.y][current.x] == 'S') {
+		int loopedY = loopCoordinate(current.y, lines.size());
+		int loopedX = loopCoordinate(current.x, lines[loopedY].size());
+		if (lines[loopedY][loopedX] == '.' || lines[loopedY][loopedX] == 'S') {
 			position next;
 			next.coord = current;
 			next.stepsRemaining = pos.stepsRemaining - 1;
@@ -95,73 +105,224 @@ int GetNumEndPositions(position pos, std::vector<std::string>& lines, std::unord
 	return result;
 }
 
+bool drawMap = false;
+std::vector<std::string> mapCopy;
 
+int GetStepsNeededToFill(std::vector<coord> startPositions, std::vector<std::string>& lines, int& reachableGardens, int maxSteps) {
+	std::queue<coord> current;
+	for (auto sp : startPositions) {
+		current.push(sp);
+	}
+	std::queue<coord> next;
+
+	std::unordered_set<coord> cache;
+
+	int steps = 0;
+
+
+	int reachable = 0;
+	while ((!current.empty() || !next.empty())) {
+		if (current.empty()) {
+			current = next;
+			next = {};
+
+			steps++;
+			if (steps > maxSteps) break;
+		}
+
+		auto p = current.front();
+		current.pop();
+
+		if (cache.count(p)) continue;
+		cache.insert(p);
+		int remainingSteps = maxSteps - steps;
+		bool even = remainingSteps % 2 == 0;
+		if (even) {
+			if (drawMap) {
+				if (mapCopy[p.y][p.x] != 'S') {
+					mapCopy[p.y][p.x] = 'X';
+				}
+			}
+			reachable++;
+		}
+
+		for (const auto dir : directions) {
+			coord current(p.x + dir.x, p.y + dir.y);
+
+			if (current.y < 0 || current.y > lines.size() - 1 || current.x < 0 || current.x > lines[current.y].size() - 1) {
+				//out of bounds
+				continue;
+			}
+
+			if (lines[current.y][current.x] == '.' || lines[current.y][current.x] == 'S') {
+				next.push(current);
+			}
+		}
+	}
+
+	reachableGardens = reachable;
+
+	return steps;
+}
 
 void DoDay21() {
 	auto lines = GetLines("input/day21.txt");
 
+	mapCopy = lines;
+	std::unordered_set<coord> gardens;
 	coord startPoint;
 	for (size_t i = 0; i < lines.size(); i++) {
 		for (size_t c = 0; c < lines[i].size(); c++) {
 			if (lines[i][c] == 'S') {
 				startPoint.y = i;
 				startPoint.x = c;
-				break;
+			}
+
+			if (lines[i][c] == '.' || lines[i][c] == 'S') {
+				coord g(c, i);
+				gardens.insert(g);
 			}
 		}
 	}
 
-	//basically floodfill
-	int maxSteps = 64;
+	const long long maxSteps = 26501365;
 
-	position start;
-	start.coord = startPoint;
-	start.stepsRemaining = maxSteps;
-	std::queue<position> positions;
-	positions.push(start);
+	const int mapSize = lines.size();
 
-	std::unordered_set<coord> endPoints;
-
-	std::unordered_map<position, int> cache;
-
-	std::vector<std::string> mapCopy = lines;
+	const long long totalMapsPerAxis = maxSteps / mapSize;
+	const long long fullSquaresPerDir = totalMapsPerAxis - 1;
 
 
-	int result = GetNumEndPositions(start, lines, cache, mapCopy);
+	long long endAmount = 0;
+	//get how many steps it takes to visit every garden of one map
+	std::vector<coord> startPositionsStart = {
+		startPoint
+	};
+	std::vector<coord> startPositionsNext;
+	for (auto dir : directions) {
+		coord n;
+		n.x = dir.x + startPoint.x;
+		n.y = dir.y + startPoint.y;
+		startPositionsNext.push_back(n);
+	}
+
+	int evenCount, oddCount; //not 100% sure here
+
+//#define print PrintMap(mapCopy); mapCopy = lines; std::cout << std::endl;
+
+#define print 
+
+	drawMap = true;
+	GetStepsNeededToFill(startPositionsStart, lines, oddCount, maxSteps);
+	print
+		GetStepsNeededToFill(startPositionsNext, lines, evenCount, maxSteps);
+	print
+		//
+
+		long long amountOfOddMaps, amountofEvenMaps;
+
+	amountOfOddMaps = ((fullSquaresPerDir / 2) * 2) + 1;
+	amountofEvenMaps = (totalMapsPerAxis + 1) / 2 * 2;
+
+	amountofEvenMaps = pow(amountofEvenMaps, 2);
+	amountOfOddMaps = pow(amountOfOddMaps, 2);
+
+	long long evenAdditon = evenCount * amountofEvenMaps;
+	long long oddAddition = oddCount * amountOfOddMaps;
+	endAmount += evenAdditon;
+	endAmount += oddAddition;
+
+	//these 2 are confirmed by reddit
+
+	int topCorner, rightCorner, bottomCorner, leftCorner;
+	std::vector<coord> topPosStart{ {65, mapSize - 1} };
+	std::vector<coord> rightPosStart{ {0, 65} };
+	std::vector<coord> botPosStart{ {65, 0} };
+	std::vector<coord> leftPosStart{ {mapSize - 1, 65} };
 
 
-	//while (!positions.empty()) {
-	//	auto current = positions.front();
-	//	positions.pop();
+	//mapsize -1 steps as we are at 131 steps before we step into the map
+	GetStepsNeededToFill(topPosStart, lines, topCorner, mapSize - 1);
+	print
+		GetStepsNeededToFill(rightPosStart, lines, rightCorner, mapSize - 1);
+	print
+		GetStepsNeededToFill(botPosStart, lines, bottomCorner, mapSize - 1);
+	print
+		GetStepsNeededToFill(leftPosStart, lines, leftCorner, mapSize - 1);
+	print
 
-	//	char& cur = mapCopy[current.coord.y][current.coord.x];
+	long long corners = topCorner + rightCorner + bottomCorner + leftCorner;
+
+	endAmount += topCorner;
+	endAmount += rightCorner;
+	endAmount += bottomCorner;
+	endAmount += leftCorner;
+
+	int topRightCorner, topLeftCorner, bottomRightCorner, bottomLeftCorner;
+	std::vector<coord> topRightPosStart{ {0, mapSize - 1} };
+	std::vector<coord> topLeftPosStart{ {mapSize - 1, mapSize - 1} };
+	std::vector<coord> botRightPosStart{ {0, 0} };
+	std::vector<coord> botLeftPosStart{ {mapSize - 1, 0} };
 
 
-	//	if (current.stepsRemaining == 0) {
-	//		if (cur == 'S' || cur == '.') {
-	//			cur = '1';
-	//		}
-	//		else {
-	//			cur++;
-	//		}
-	//		endPoints.insert(current.coord);
-	//		//PrintMap(mapCopy);
-	//		continue;
-	//	}
+	//SMALL CORNERS
+	int stepsRemaining = 64;
+	GetStepsNeededToFill(topRightPosStart, lines, topRightCorner, stepsRemaining);
+	print
+		GetStepsNeededToFill(topLeftPosStart, lines, topLeftCorner, stepsRemaining);
+	print
+		GetStepsNeededToFill(botRightPosStart, lines, bottomRightCorner, stepsRemaining);
+	print
+		GetStepsNeededToFill(botLeftPosStart, lines, bottomLeftCorner, stepsRemaining);
+	print
 
-	//	//PrintMap(mapCopy);
-	//	//std::cout << std::endl;
-	//	auto nextPositions = GetSurrounding(current.coord, lines);
+	long long smallCorners = topRightCorner + topLeftCorner + bottomLeftCorner + bottomRightCorner;
 
-	//	for (auto p : nextPositions) {
-	//		position n;
-	//		n.coord = p;
-	//		n.stepsRemaining = current.stepsRemaining - 1;
-	//		positions.push(n);
-	//	}
-	//}
+	endAmount += topRightCorner * totalMapsPerAxis;
+	endAmount += topLeftCorner * totalMapsPerAxis;
+	endAmount += bottomLeftCorner * totalMapsPerAxis;
+	endAmount += bottomRightCorner * totalMapsPerAxis;
 
-	PrintMap(mapCopy);
-	std::cout << result << std::endl;
 
+	//BIG CORNERS
+	int bigtopRightCorner, bigtopLeftCorner, bigbottomRightCorner, bigbottomLeftCorner;
+	std::vector<coord> bigTopRightPosStart{ {0, mapSize - 1} };
+	std::vector<coord> bigTopLeftPosStart{ {mapSize - 1, mapSize - 1} };
+	std::vector<coord> bigBotRightPosStart{ {0, 0} };
+	std::vector<coord> bigBotLeftPosStart{ {mapSize - 1, 0} };
+	//drawMap = true;
+
+	int steps = 131 + 130 - 66;
+	GetStepsNeededToFill(bigTopRightPosStart, lines, bigtopRightCorner, steps);
+	print
+		GetStepsNeededToFill(bigTopLeftPosStart, lines, bigtopLeftCorner, steps);
+	print
+		GetStepsNeededToFill(bigBotRightPosStart, lines, bigbottomRightCorner, steps);
+	print
+		GetStepsNeededToFill(bigBotLeftPosStart, lines, bigbottomLeftCorner, steps);
+	print
+
+		long long bigCornerAmt = totalMapsPerAxis - 1;
+
+	long long bigCorners = bigtopLeftCorner + bigtopRightCorner + bigbottomLeftCorner + bigbottomRightCorner;
+
+
+	endAmount += bigtopRightCorner * bigCornerAmt;
+	endAmount += bigtopLeftCorner * bigCornerAmt;
+	endAmount += bigbottomLeftCorner * bigCornerAmt;
+	endAmount += bigbottomRightCorner * bigCornerAmt;
+
+
+
+	//PrintMap(lines);
+
+	std::cout << endAmount << std::endl;
+
+	const long long ANSWER = 632257949158206;
+
+	if(endAmount != ANSWER) {
+		std::cout << "WRONG ANSWER! - off by: " << (abs(ANSWER-endAmount)) << std::endl;
+	}
+	//int amountOfOddMaps = pow(totalMapsPerDirection+1, 2);
+	//int amountOfEvenMaps = pow(a)
 }
