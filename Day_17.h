@@ -7,41 +7,7 @@
 #include <unordered_set>
 
 
-struct pathNode {
-	coord position;
-	coord lastDir;
-	int cost;
-	int countSameDir;
-	int pathCost;
-	//std::vector<pathNode> previous;
 
-	bool operator==(const pathNode& other) const {
-		return position == other.position &&
-			lastDir == other.lastDir &&
-			countSameDir == other.countSameDir; // &&
-
-			//cost == other.cost &&
-			//pathCost == other.pathCost;
-	}
-};
-
-#define pathTS(p) "x " << (p).position.x << " y " << (p).position.y << " from: x " << p.lastDir.x << " y " << p.lastDir.y << " ct: " << p.countSameDir << " cost: " << p.cost << " pcost: " << p.pathCost
-
-namespace std {
-	template<>
-	struct hash<pathNode> {
-		std::size_t operator()(const pathNode& c) const {
-			std::size_t res = 17;
-			res = res * 31 + hash<coord>()(c.position);
-			res = res * 31 + hash<coord>()(c.lastDir);
-			res = res * 31 + hash<int>()(c.countSameDir);
-
-			//res = res * 31 + hash<int>()(c.cost);
-			//res = res * 31 + hash<int>()(c.pathCost);
-			return res;
-		}
-	};
-}
 
 
 std::vector<std::string> lines;

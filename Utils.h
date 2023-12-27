@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 #include <chrono>
+#include <unordered_set>
 
 struct coord {
 	int x, y;
@@ -13,10 +14,27 @@ struct coord {
 		return x == other.x && y == other.y;
 	}
 
+	bool operator!=(const coord& other) const {
+		return !(other == *this);
+	}
+
 	coord(int x, int y) : x(x), y(y) {}
 
 	coord() : x(0), y(0) {}
+
+	
 };
+
+namespace std
+{
+    template<> struct less<coord>
+    {
+       bool operator() (const coord& lhs, const coord& rhs) const
+       {
+           return lhs.x == rhs.x ? lhs.y < rhs.y : lhs.x < rhs.x;
+       }
+    };
+}
 
 struct longCoord {
 	long long x, y;
@@ -37,6 +55,56 @@ namespace std {
         return res;
     }
 	
+	};
+}
+
+struct pathNode {
+	coord position;
+	coord lastDir;
+	int cost;
+	int countSameDir;
+	int pathCost;
+	void* headPtr = nullptr;
+	std::unordered_set<coord>* seen;
+	//std::vector<pathNode> previous;
+
+	bool operator==(const pathNode& other) const {
+		return position == other.position &&
+			lastDir == other.lastDir &&
+			countSameDir == other.countSameDir; // &&
+
+			//cost == other.cost &&
+			//pathCost == other.pathCost;
+	}
+};
+
+namespace std
+{
+    template<> struct less<pathNode>
+    {
+       bool operator() (const pathNode& lhs, const pathNode& rhs) const
+       {
+           return lhs.position.x + lhs.position.y < rhs.position.x + rhs.position.y;
+       }
+    };
+}
+
+
+#define pathTS(p) "x " << (p).position.x << " y " << (p).position.y << " from: x " << p.lastDir.x << " y " << p.lastDir.y << " ct: " << p.countSameDir << " cost: " << p.cost << " pcost: " << p.pathCost
+
+namespace std {
+	template<>
+	struct hash<pathNode> {
+		std::size_t operator()(const pathNode& c) const {
+			std::size_t res = 17;
+			res = res * 31 + hash<coord>()(c.position);
+			res = res * 31 + hash<coord>()(c.lastDir);
+			res = res * 31 + hash<int>()(c.countSameDir);
+
+			//res = res * 31 + hash<int>()(c.cost);
+			//res = res * 31 + hash<int>()(c.pathCost);
+			return res;
+		}
 	};
 }
 
@@ -186,6 +254,7 @@ void PrintMap(std::vector<std::string>& vec) {
 	for (auto& s : vec) {
 		std::cout << s << std::endl;
 	}
+	std::cout << std::endl;
 }
 
 std::vector<int> GetNumbersFromString(const std::string& string) {
