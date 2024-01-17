@@ -35,11 +35,18 @@ for i in range(len(S)):
 
     den = ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
     if den != 0:
-      px = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
-      py = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / ((x1-x2)*(y3-y4) - (y1-y2)*(x3-x4))
+      px = ((x1*y2 - y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4)) / den
+      py = ((x1*y2 - y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4)) / den
       validA = (px>x1)==(x2>x1)
       validB = (px>x3)==(x4>x3)
+      
+      if i == 6 and j == 7:
+        print("collision", px, py)
+        print("validA", validA)
+        print("validB", validB)
+        print("withinTest", 200000000000000<=px<=400000000000000 and 200000000000000<=py<=400000000000000)
 
       if 200000000000000<=px<=400000000000000 and 200000000000000<=py<=400000000000000 and validA and validB:
         ans += 1
+        print(i,", ",j)
 print(ans)

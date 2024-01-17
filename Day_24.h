@@ -112,14 +112,12 @@ void DoDay24() {
 
 	int result = 0;
 
-	int current = 0;
-	int total = (lines.size() * (lines.size()-1)) / 2;
+	//int current = 0;
+	//int total = (lines.size() * (lines.size()-1)) / 2;
 	for (size_t a = 0; a < lines.size() - 1; a++)
 	{
-		std::cout << current + 1 << "/" << total << std::endl;
 		for (size_t b = a + 1; b < lines.size(); b++)
 		{
-			++current;
 			//std::cout << "A: " << hails[a] << std::endl;
 			//std::cout << "B: " << hails[b] << std::endl;
 
@@ -130,36 +128,50 @@ void DoDay24() {
 				continue;
 			}
 
-			bool aInFuture = intersectionX > hails[a].posX == hails[a].posX <= hails[a].posX + hails[a].velX;
+			bool aInFuture = intersectionX > hailLines[a].posX1 == hailLines[a].posX2 > hailLines[a].posX1;
 			//bool a_y_inpast = isInPast(hails[a].posY, hails[a].velY, intersectionY);
 			bool aInPast = !aInFuture;
 
-			bool bInFuture = intersectionX > hails[b].posX == hails[b].posX <= hails[b].posX + hails[b].velX;
+			bool bInFuture = intersectionX > hailLines[b].posX1 == hailLines[b].posX2 > hailLines[b].posX1;
 			//bool b_y_inpast = isInPast(hails[b].posY, hails[b].velY, intersectionY);
 			bool bInpast = !bInFuture;
 
-			if (aInPast && bInpast) {
-				//std::cout << "Collision in past for A and B.\n" << std::endl;
-				continue;
-			}
-
-			if (aInPast) {
-				//std::cout << "Collision in past for A.\n" << std::endl;
-				continue;
-			}
-
-			if (bInpast) {
-				//std::cout << "Collision in past for B.\n" << std::endl;
-				continue;
-			}
 			bool withinTestArea = intersectionX >= minSpace && intersectionX <= maxSpace && intersectionY >= minSpace && intersectionY <= maxSpace;
-			if (!withinTestArea) {
-				//std::cout << "Collision outside test area.\n" << std::endl;
-				continue;
+
+			if (a == 6 && b == 7) {
+				std::cout << "Collision: " << intersectionX << "," << intersectionY << std::endl;
+				std::cout << "aInFuture " << aInFuture << std::endl;
+				std::cout << "bInFuture " << bInFuture << std::endl;
+				std::cout << "withinTest " << withinTestArea << std::endl;
+			}
+			if (!isParallel && aInFuture && bInFuture && withinTestArea) {
+				std::cout << a << "," << b << std::endl;
+				std::cout << "\n" << std::endl;
+				result++;
+				//continue;
 			}
 
-			//std::cout << "Cross at: x=" << intersectionX << ", y=" << intersectionY << "\n" << std::endl;
-			result++;
+			//if (aInPast && bInpast) {
+			//	//std::cout << "Collision in past for A and B.\n" << std::endl;
+			//	continue;
+			//}
+
+			//if (aInPast) {
+			//	//std::cout << "Collision in past for A.\n" << std::endl;
+			//	continue;
+			//}
+
+			//if (bInpast) {
+			//	//std::cout << "Collision in past for B.\n" << std::endl;
+			//	continue;
+			//}
+			//if (!withinTestArea) {
+			//	//std::cout << "Collision outside test area.\n" << std::endl;
+			//	continue;
+			//}
+
+			////std::cout << "Cross at: x=" << intersectionX << ", y=" << intersectionY << "\n" << std::endl;
+			//result++;
 		}
 	}
 
