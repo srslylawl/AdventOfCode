@@ -28,11 +28,61 @@ struct hail {
 	}
 };
 
+std::ostream& operator<<(std::ostream& os, const hail& h)
+{
+	os << h.posX << ", " << h.posY << ", " << h.posZ << " @ " << h.velX << ", " << h.velY << ", " << h.velZ;
+	return os;
+}
+
+struct line {
+	long long posX1, posX2;
+	long long posY1, posY2;
+};
+
+std::pair<double, double> lineIntersection(const line& a, const line& b, bool& isParallel) {
+	double x1 = a.posX1;
+	double x2 = a.posX2;
+	double x3 = b.posX1;
+	double x4 = b.posX2;
+
+	double y1 = a.posY1;
+	double y2 = a.posY2;
+	double y3 = b.posY1;
+	double y4 = b.posY2;
+
+	double px_numerator = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4);
+
+	double denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+	double px = px_numerator / denominator;
+
+	double py_numerator = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4));
+
+	double py = py_numerator / denominator;
+
+	//std::cout << " px_numerator: " << px_numerator << ", px_denominator:" << px_denominator << std::endl;
+	//std::cout << " py_numerator: " << py_numerator << ", py_denominator:" << py_denominator << std::endl;
+
+	isParallel = denominator == 0;
+
+	return std::make_pair(px, py);
+}
+
+
+bool isInPast(double pos, double velocity, double point) {
+	if (velocity > 0) {
+		return point < pos;
+	}
+
+	return point > pos;
+}
+
 
 void DoDay24() {
 	auto lines = GetLines("input/day24.txt");
 
 	std::vector<hail> hails(lines.size());
+	std::vector<line> hailLines(lines.size());
 
 	const long long minSpace = 200000000000000;
 	const long long maxSpace = 400000000000000;
@@ -49,33 +99,71 @@ void DoDay24() {
 		}
 
 		hails[i] = hail;
+
+		line l;
+		l.posX1 = hail.posX;
+		l.posX2 = hail.posX + hail.velX;
+		l.posY1 = hail.posY;
+		l.posY2 = hail.posY + hail.velY;
+		hailLines[i] = l;
 	}
 
 	//convert hails to lines
 
-	hail& h = hails[0];
-	hail& h2 = hails[1];
+	int result = 0;
 
-	float x1 = h.posX;
-	float y1 = h.posY;
+	int current = 0;
+	int total = (lines.size() * (lines.size()-1)) / 2;
+	for (size_t a = 0; a < lines.size() - 1; a++)
+	{
+		std::cout << current + 1 << "/" << total << std::endl;
+		for (size_t b = a + 1; b < lines.size(); b++)
+		{
+			++current;
+			//std::cout << "A: " << hails[a] << std::endl;
+			//std::cout << "B: " << hails[b] << std::endl;
 
-	float x2 = h.posX + h.velX;
-	float y2 = h.posY + h.velY;
+			bool isParallel;
+			auto [intersectionX, intersectionY] = lineIntersection(hailLines[a], hailLines[b], isParallel);
+			if (isParallel) {
+				//std::cout << "Lines are parallel.\n" << std::endl;
+				continue;
+			}
 
-	float x3 = h2.posX;
-	float y3 = h2.posY;
+			bool aInFuture = intersectionX > hails[a].posX == hails[a].posX <= hails[a].posX + hails[a].velX;
+			//bool a_y_inpast = isInPast(hails[a].posY, hails[a].velY, intersectionY);
+			bool aInPast = !aInFuture;
 
-	float x4 = h2.posX + h2.velX;
-	float y4 = h2.posY + h2.velY;
+			bool bInFuture = intersectionX > hails[b].posX == hails[b].posX <= hails[b].posX + hails[b].velX;
+			//bool b_y_inpast = isInPast(hails[b].posY, hails[b].velY, intersectionY);
+			bool bInpast = !bInFuture;
 
-	float px = 
-		((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) 
-		/ ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+			if (aInPast && bInpast) {
+				//std::cout << "Collision in past for A and B.\n" << std::endl;
+				continue;
+			}
 
-	float py = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4))
-		/ ((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+			if (aInPast) {
+				//std::cout << "Collision in past for A.\n" << std::endl;
+				continue;
+			}
 
-	std::cout << "PX: " << px << " PY:" << py << std::endl;
+			if (bInpast) {
+				//std::cout << "Collision in past for B.\n" << std::endl;
+				continue;
+			}
+			bool withinTestArea = intersectionX >= minSpace && intersectionX <= maxSpace && intersectionY >= minSpace && intersectionY <= maxSpace;
+			if (!withinTestArea) {
+				//std::cout << "Collision outside test area.\n" << std::endl;
+				continue;
+			}
 
+			//std::cout << "Cross at: x=" << intersectionX << ", y=" << intersectionY << "\n" << std::endl;
+			result++;
+		}
+	}
 
+	//correct result would be 27732
+
+	std::cout << "Result: " << result << std::endl;
 }
